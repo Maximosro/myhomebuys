@@ -35,13 +35,17 @@ public class ReceiptService {
   private final MercadonaItemRepository mercadonaItemRepository;
 
   public ReceiptResponse uploadReceipt(String store, MultipartFile file) {
+    log.info("Processing upload for store: {}", store);
     ReceiptParser parser = parserRegistry.findParser(store);
 
     try (InputStream is = file.getInputStream()) {
       ParsedReceipt parsed = parser.parse(is);
       Receipt receipt = saveReceipt(parsed);
+      log.info("Receipt saved: id={}, store={}, date={}, total={}",
+          receipt.getId(), receipt.getStore(), receipt.getDate(), receipt.getTotal());
       return ReceiptResponse.from(receipt, parsed.getItems());
     } catch (IOException e) {
+      log.error("Failed to read uploaded file", e);
       throw new ReceiptParsingException("Failed to read uploaded file", e);
     }
   }
@@ -50,15 +54,19 @@ public class ReceiptService {
   public List<ReceiptListResponse> search(String store, BigDecimal totalMin, BigDecimal totalMax,
       LocalDate dateAfter, LocalDate dateBefore) {
     if (totalMin != null && totalMax != null && totalMin.compareTo(totalMax) > 0) {
-      log.error("El Total minimo debe ser menor o igual al total maximo");
-      return List.of();
+      log.warn("Invalid search params: total-min {} > total-max {}", totalMin, totalMax);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "total-min must be less than or equal to total-max");
     }
 
     if (dateAfter != null && dateBefore != null && dateAfter.isAfter(dateBefore)) {
-      log.error("La fecha de inicio debe ser menor o igual a la fecha final");
-      return List.of();
+      log.warn("Invalid search params: date-after {} > date-before {}", dateAfter, dateBefore);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "date-after must be less than or equal to date-before");
     }
 
+    log.debug("Searching receipts: store={}, totalMin={}, totalMax={}, dateAfter={}, dateBefore={}",
+        store, totalMin, totalMax, dateAfter, dateBefore);
     return receiptRepository.search(store, totalMin, totalMax, dateAfter, dateBefore).stream()
         .map(ReceiptListResponse::from).toList();
   }
@@ -81,6 +89,7 @@ public class ReceiptService {
 
   @Transactional
   public void delete(UUID id) {
+    log.info("Deleting receipt: {}", id);
     receiptRepository.deleteById(id);
     mercadonaItemRepository.deleteAllByIdInBatch(
         mercadonaItemRepository.findByReceiptId(id).stream()
@@ -89,10 +98,10 @@ public class ReceiptService {
   }
 
   @Transactional
-  public boolean deleteAll() {
+  public void deleteAll() {
+    log.warn("Deleting all receipts and items");
     receiptRepository.deleteAll();
     mercadonaItemRepository.deleteAll();
-    return true;
   }
 
   private Receipt saveReceipt(ParsedReceipt parsed) {

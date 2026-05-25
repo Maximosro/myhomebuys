@@ -22,5 +22,6 @@ server:
   port: 8080
   servlet:
     context-path: /myhomebuys
-log:
-  level: debug
+logging:
+  level:
+    com.sro.myhomebuys: DEBUG
