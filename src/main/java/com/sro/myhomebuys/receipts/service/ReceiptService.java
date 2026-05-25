@@ -12,6 +12,8 @@ import com.sro.myhomebuys.receipts.repository.MercadonaItemRepository;
 import com.sro.myhomebuys.receipts.repository.ReceiptRepository;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,23 @@ public class ReceiptService {
     } catch (IOException e) {
       throw new ReceiptParsingException("Failed to read uploaded file", e);
     }
+  }
+
+  @Transactional(readOnly = true)
+  public List<ReceiptListResponse> search(String store, BigDecimal totalMin, BigDecimal totalMax,
+      LocalDate dateAfter, LocalDate dateBefore) {
+    if (totalMin != null && totalMax != null && totalMin.compareTo(totalMax) > 0) {
+      log.error("El Total minimo debe ser menor o igual al total maximo");
+      return List.of();
+    }
+
+    if (dateAfter != null && dateBefore != null && dateAfter.isAfter(dateBefore)) {
+      log.error("La fecha de inicio debe ser menor o igual a la fecha final");
+      return List.of();
+    }
+
+    return receiptRepository.search(store, totalMin, totalMax, dateAfter, dateBefore).stream()
+        .map(ReceiptListResponse::from).toList();
   }
 
   @Transactional(readOnly = true)

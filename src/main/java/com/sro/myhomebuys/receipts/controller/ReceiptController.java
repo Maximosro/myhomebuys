@@ -3,7 +3,10 @@ package com.sro.myhomebuys.receipts.controller;
 import com.sro.myhomebuys.receipts.controller.dto.ReceiptListResponse;
 import com.sro.myhomebuys.receipts.controller.dto.ReceiptResponse;
 import com.sro.myhomebuys.receipts.exception.ReceiptParsingException;
+import com.sro.myhomebuys.receipts.model.Store;
 import com.sro.myhomebuys.receipts.service.ReceiptService;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,16 @@ public class ReceiptController {
     }
     ReceiptResponse response = receiptService.uploadReceipt(store, file);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
+
+  @GetMapping("/search")
+  public ResponseEntity<List<ReceiptListResponse>> search(@RequestParam(required = false) String store,
+      @RequestParam(value = "total-min", required = false) BigDecimal totalMin,
+      @RequestParam(value = "total-max", required = false) BigDecimal totalMax,
+      @RequestParam(value = "date-before", required = false) LocalDate dateB,
+      @RequestParam(value = "date-after", required = false) LocalDate dateA) {
+    List<ReceiptListResponse> result = receiptService.search(store, totalMin, totalMax, dateA, dateB);
+    return ResponseEntity.ok(result);
   }
 
   @GetMapping
