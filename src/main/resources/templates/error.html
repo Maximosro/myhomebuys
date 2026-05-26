@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+<th:block th:fragment="content">
+  <div class="text-center py-16">
+    <h1 class="text-6xl font-bold text-gray-300 mb-4" th:text="${status}">404</h1>
+    <p class="text-lg text-gray-500 mb-6" th:text="${message}">Page not found</p>
+    <a th:href="@{/}" class="text-blue-600 hover:text-blue-800 underline">Back to home</a>
+  </div>
+</th:block>
+</html>

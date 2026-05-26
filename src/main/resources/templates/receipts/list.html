@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+<th:block th:fragment="content">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Receipts</h1>
+    <div class="flex gap-2">
+      <a th:href="@{/receipts/upload}"
+         class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+        Upload
+      </a>
+      <form method="post" th:action="@{/receipts/delete-all}" style="display:inline">
+        <button type="submit"
+                onclick="return confirm('Delete all receipts?')"
+                class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">
+          Delete all
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Search form -->
+  <form th:hx-get="@{/receipts/list}"
+        hx-target="#receipt-list"
+        hx-trigger="submit"
+        class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Store</label>
+        <select name="store" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+          <option value="">All</option>
+          <option th:each="s : ${T(com.sro.myhomebuys.receipts.model.Store).values()}"
+                  th:value="${s.name()}"
+                  th:text="${s.name()}"
+                  th:selected="${store != null && store == s.name()}"></option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">From</label>
+        <input type="date" name="date-after" th:value="${dateAfter}"
+               class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">To</label>
+        <input type="date" name="date-before" th:value="${dateBefore}"
+               class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Min total</label>
+        <input type="number" step="0.01" name="total-min" th:value="${totalMin}"
+               class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="0.00">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Max total</label>
+        <input type="number" step="0.01" name="total-max" th:value="${totalMax}"
+               class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="0.00">
+      </div>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button type="submit"
+              class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900">
+        Search
+      </button>
+      <button type="button"
+              onclick="this.form.reset()"
+              th:hx-get="@{/receipts/list}"
+              hx-target="#receipt-list"
+              class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200">
+        Clear
+      </button>
+    </div>
+  </form>
+
+  <!-- Receipt table (HTMX target) -->
+  <div id="receipt-list" th:insert="~{receipts/fragments :: table(receipts=${receipts})}"></div>
+</th:block>
+</html>
