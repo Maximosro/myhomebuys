@@ -2,6 +2,7 @@ package com.sro.myhomebuys.receipts.parser;
 
 import com.sro.myhomebuys.receipts.exception.ReceiptParsingException;
 import com.sro.myhomebuys.receipts.model.Store;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -18,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
+@Slf4j
 public class MercadonaOnlineParser implements ReceiptParser {
 
     private static final String STORE_NAME = "MERCADONA";
@@ -41,12 +43,15 @@ public class MercadonaOnlineParser implements ReceiptParser {
 
     @Override
     public ParsedReceipt parse(InputStream pdfStream) throws ReceiptParsingException {
+        log.debug("Parsing Mercadona PDF...");
         try (PDDocument document = Loader.loadPDF(pdfStream.readAllBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             stripper.setSortByPosition(true);
             String text = stripper.getText(document);
+            log.debug("PDF text extracted, {} characters", text.length());
             return parseText(text);
         } catch (IOException e) {
+            log.error("Failed to read PDF file", e);
             throw new ReceiptParsingException("Failed to read PDF file", e);
         }
     }
@@ -60,17 +65,22 @@ public class MercadonaOnlineParser implements ReceiptParser {
             }
         }
 
+        log.debug("Extracted {} non-empty lines from PDF", lines.size());
+
         LocalDate date = extractDate(lines);
         List<ParsedReceipt.ParsedItem> items = extractItems(lines);
         BigDecimal total = extractTotal(lines);
 
         if (items.isEmpty()) {
+            log.warn("No products found in the PDF");
             throw new ReceiptParsingException("No products found in the PDF");
         }
         if (total == null) {
+            log.warn("Total not found in the PDF");
             throw new ReceiptParsingException("Total not found in the PDF");
         }
 
+        log.debug("Parsed receipt: date={}, total={}, items={}", date, total, items.size());
         return ParsedReceipt.builder()
                 .store(Store.MERCADONA)
                 .date(date)
@@ -86,6 +96,7 @@ public class MercadonaOnlineParser implements ReceiptParser {
                 return LocalDate.parse(m.group(1) + "/" + m.group(2) + "/" + m.group(3), DATE_FORMAT);
             }
         }
+        log.warn("Cobrado date not found in PDF");
         throw new ReceiptParsingException("Cobrado date not found in PDF");
     }
 
