@@ -1,30 +1,145 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
 <th:block th:fragment="content">
-  <div class="text-center mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to myhomebuys</h1>
-    <p class="text-gray-500">Your personal home management platform</p>
+
+  <!-- Dashboard header -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-1">Resumen de tus compras</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <a th:href="@{/receipts}"
-       class="block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-      <div class="text-2xl mb-2">🧾</div>
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">Receipts</h2>
-      <p class="text-sm text-gray-500">Upload, search and manage your shopping receipts</p>
-    </a>
-
-    <div class="block p-6 bg-white rounded-lg shadow-sm border border-gray-200 opacity-50 cursor-not-allowed">
-      <div class="text-2xl mb-2">📦</div>
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">Pantry</h2>
-      <p class="text-sm text-gray-500">Coming soon</p>
+  <!-- Stat cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div class="stat-card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+          <span th:insert="~{fragments/icons :: currency}" class="w-5 h-5"></span>
+        </div>
+      </div>
+      <div class="text-2xl font-bold text-gray-900 dark:text-white" th:text="${#numbers.formatDecimal(dashboard.totalSpent, 1, 2, 'COMMA')} + ' €'">0,00 €</div>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Total gastado</div>
     </div>
 
-    <div class="block p-6 bg-white rounded-lg shadow-sm border border-gray-200 opacity-50 cursor-not-allowed">
-      <div class="text-2xl mb-2">📊</div>
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">Analytics</h2>
-      <p class="text-sm text-gray-500">Coming soon</p>
+    <div class="stat-card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          <span th:insert="~{fragments/icons :: receipt}" class="w-5 h-5"></span>
+        </div>
+      </div>
+      <div class="text-2xl font-bold text-gray-900 dark:text-white" th:text="${dashboard.receiptCount}">0</div>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Tickets</div>
+    </div>
+
+    <div class="stat-card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-600 dark:text-amber-400">
+          <span th:insert="~{fragments/icons :: chart}" class="w-5 h-5"></span>
+        </div>
+      </div>
+      <div class="text-2xl font-bold text-gray-900 dark:text-white" th:text="${#numbers.formatDecimal(dashboard.averageTotal, 1, 2, 'COMMA')} + ' €'">0,00 €</div>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Ticket medio</div>
     </div>
   </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Monthly chart -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Gasto mensual</h2>
+      <div th:if="${#lists.isEmpty(dashboard.monthlyTotals)}" class="h-48 flex items-center justify-center text-gray-400 dark:text-gray-600 text-sm">
+        No hay datos suficientes
+      </div>
+      <div th:unless="${#lists.isEmpty(dashboard.monthlyTotals)}">
+        <canvas id="monthlyChart" class="max-h-48"></canvas>
+      </div>
+    </div>
+
+    <!-- Recent receipts -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-800">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Últimas compras</h2>
+        <a th:href="@{/receipts}" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Ver todas</a>
+      </div>
+      <div th:if="${#lists.isEmpty(dashboard.recentReceipts)}" class="px-5 py-8 text-center text-gray-400 dark:text-gray-600 text-sm">
+        No hay tickets todavía
+      </div>
+      <div th:unless="${#lists.isEmpty(dashboard.recentReceipts)}" class="divide-y divide-gray-100 dark:divide-gray-800">
+        <div th:each="r : ${dashboard.recentReceipts}"
+             class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+              <span th:insert="~{fragments/icons :: receipt}" class="w-4 h-4"></span>
+            </div>
+            <div class="min-w-0">
+              <div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" th:text="${r.store}">Store</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400" th:text="${r.date}">Date</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 flex-shrink-0 ml-3">
+            <span class="text-sm font-mono font-medium text-gray-900 dark:text-gray-100"
+                  th:text="${#numbers.formatDecimal(r.total, 1, 2, 'COMMA')} + ' €'">0,00 €</span>
+            <a th:href="@{/receipts/{id}(id=${r.id})}"
+               class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              <span th:insert="~{fragments/icons :: eye}" class="w-4 h-4"></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript" th:unless="${#lists.isEmpty(dashboard.monthlyTotals)}">
+    (function() {
+      const canvas = document.getElementById('monthlyChart');
+      if (!canvas) return;
+      const isDark = document.documentElement.classList.contains('dark');
+      const raw = [
+        [# th:each="m : ${dashboard.monthlyTotals}"]
+          { month: "[(${m.month})]", total: [(${m.total})] },
+        [/]
+      ];
+      const labels = raw.map(r => r.month);
+      const data = raw.map(r => r.total);
+
+      new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: isDark ? 'rgba(99, 102, 241, 0.4)' : 'rgba(99, 102, 241, 0.6)',
+            borderColor: isDark ? 'rgba(129, 140, 248, 0.8)' : 'rgba(79, 70, 229, 0.8)',
+            borderWidth: 1.5,
+            borderRadius: 4,
+            barPercentage: 0.6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: isDark ? '#9ca3af' : '#6b7280',
+                font: { size: 10 },
+                callback: v => v + '€'
+              },
+              grid: { color: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.6)' }
+            },
+            x: {
+              ticks: {
+                color: isDark ? '#9ca3af' : '#6b7280',
+                font: { size: 10 }
+              },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    })();
+  </script>
+
 </th:block>
 </html>
+
