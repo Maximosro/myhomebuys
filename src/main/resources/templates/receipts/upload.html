@@ -24,16 +24,17 @@
     </div>
 
     <div class="mb-6">
-      <label for="file" class="block text-sm font-medium text-gray-700 mb-1">Receipt PDF</label>
-      <input type="file" id="file" name="file" accept=".pdf" required
-             class="block w-full text-sm text-gray-700
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-md file:border-0
-                    file:text-sm file:font-medium
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100
-                    file:cursor-pointer cursor-pointer
-                    border border-gray-300 rounded-md p-2">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Receipt PDF</label>
+      <label for="file" class="block w-full cursor-pointer">
+        <div class="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50/30 transition-colors">
+          <span class="inline-flex px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shrink-0">
+            Browse...
+          </span>
+          <span id="file-name" class="text-sm text-gray-500 truncate">No file selected</span>
+        </div>
+        <input type="file" id="file" name="file" accept=".pdf" required class="sr-only"
+               onchange="document.getElementById('file-name').textContent = this.files[0]?.name || 'No file selected'">
+      </label>
     </div>
 
     <button type="submit"
