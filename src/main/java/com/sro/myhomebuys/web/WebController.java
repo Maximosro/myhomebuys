@@ -33,6 +33,7 @@ public class WebController {
   @GetMapping
   public String home(Model model) {
     model.addAttribute("activeModule", "home");
+    model.addAttribute("dashboard", receiptService.getDashboardStats());
     return "home";
   }
 

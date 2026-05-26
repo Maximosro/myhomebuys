@@ -1,5 +1,7 @@
 package com.sro.myhomebuys.receipts.service;
 
+import com.sro.myhomebuys.receipts.controller.dto.DashboardData;
+import com.sro.myhomebuys.receipts.controller.dto.MonthTotal;
 import com.sro.myhomebuys.receipts.controller.dto.ReceiptListResponse;
 import com.sro.myhomebuys.receipts.controller.dto.ReceiptResponse;
 import com.sro.myhomebuys.receipts.exception.ReceiptParsingException;
@@ -76,6 +78,30 @@ public class ReceiptService {
     return receiptRepository.findAllByOrderByDateDesc().stream()
         .map(ReceiptListResponse::from)
         .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public DashboardData getDashboardStats() {
+    BigDecimal totalSpent = receiptRepository.sumTotal();
+    long receiptCount = receiptRepository.count();
+    BigDecimal averageTotal = receiptCount > 0
+        ? totalSpent.divide(BigDecimal.valueOf(receiptCount), 2, java.math.RoundingMode.HALF_UP)
+        : BigDecimal.ZERO;
+    List<MonthTotal> monthlyTotals = receiptRepository.monthlyTotals().stream()
+        .map(row -> MonthTotal.builder()
+            .month((String) row[0])
+            .total((BigDecimal) row[1])
+            .build())
+        .toList();
+    List<ReceiptListResponse> recentReceipts = receiptRepository.findTop5ByOrderByDateDesc()
+        .stream().map(ReceiptListResponse::from).toList();
+    return DashboardData.builder()
+        .totalSpent(totalSpent)
+        .receiptCount(receiptCount)
+        .averageTotal(averageTotal)
+        .monthlyTotals(monthlyTotals)
+        .recentReceipts(recentReceipts)
+        .build();
   }
 
   @Transactional(readOnly = true)

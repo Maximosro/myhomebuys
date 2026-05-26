@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <th:block th:fragment="toast">
-  <div class="fixed top-4 right-4 z-50 max-w-sm p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-lg"
+  <div class="fixed top-4 right-4 z-50 max-w-sm p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up"
        role="alert"
-       _="on load wait 4s then remove me">
-    <div class="flex items-center justify-between">
-      <span th:text="${message}">Error</span>
-      <button class="ml-4 text-red-700 hover:text-red-900 font-bold"
-              _="on click remove the closest parent div">x</button>
-    </div>
+       id="error-toast">
+    <span th:insert="~{fragments/icons :: close}" class="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0"></span>
+    <span th:text="${message}" class="text-sm font-medium flex-1">Error</span>
+    <button onclick="this.closest('[role=alert]').remove()"
+            class="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-200 flex-shrink-0">
+      <span th:insert="~{fragments/icons :: close}" class="w-4 h-4"></span>
+    </button>
+    <script>
+      (function() {
+        var el = document.currentScript.parentElement;
+        setTimeout(function() { if (el && el.parentElement) el.remove(); }, 4000);
+      })();
+    </script>
   </div>
 </th:block>
 </html>

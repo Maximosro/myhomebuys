@@ -13,6 +13,17 @@ public interface ReceiptRepository extends JpaRepository<Receipt, UUID> {
 
   List<Receipt> findAllByOrderByDateDesc();
 
+  List<Receipt> findTop5ByOrderByDateDesc();
+
+  @Query("SELECT COALESCE(SUM(r.total), 0) FROM Receipt r")
+  BigDecimal sumTotal();
+
+  @Query("""
+      SELECT FUNCTION('strftime', '%Y-%m', r.date) as month, SUM(r.total) as total
+      FROM Receipt r GROUP BY month ORDER BY month
+      """)
+  List<Object[]> monthlyTotals();
+
   @Query("""
       SELECT r FROM Receipt r WHERE
       (:store IS NULL OR LOWER(r.store) LIKE LOWER(CONCAT('%', :store, '%'))) AND
