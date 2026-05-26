@@ -89,12 +89,10 @@ public class ReceiptService {
 
   @Transactional
   public void delete(UUID id) {
-    log.info("Deleting receipt: {}", id);
-    receiptRepository.deleteById(id);
-    mercadonaItemRepository.deleteAllByIdInBatch(
-        mercadonaItemRepository.findByReceiptId(id).stream()
-            .map(MercadonaItem::getId)
-            .toList());
+    Receipt receipt = receiptRepository.findById(id)
+        .orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Receipt not found: " + id));
+    receiptRepository.delete(receipt);
   }
 
   @Transactional
