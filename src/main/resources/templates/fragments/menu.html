@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="menu(activeModule)">
+  <nav class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-center justify-between h-14">
+        <a th:href="@{/}" class="text-lg font-bold text-gray-800">myhomebuys</a>
+        <div class="flex gap-1">
+          <a th:href="@{/}"
+             th:classappend="${activeModule == 'home'} ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'"
+             class="px-3 py-2 rounded-md text-sm font-medium">
+            Home
+          </a>
+          <a th:href="@{/receipts}"
+             th:classappend="${activeModule == 'receipts'} ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'"
+             class="px-3 py-2 rounded-md text-sm font-medium">
+            Receipts
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</th:block>
+</html>

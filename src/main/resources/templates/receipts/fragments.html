@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="empty"></th:block>
+
+<th:block th:fragment="table(receipts)">
+  <div th:if="${#lists.isEmpty(receipts)}" class="text-center py-12 text-gray-400">
+    No receipts found.
+  </div>
+
+  <div th:if="${!#lists.isEmpty(receipts)}" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50 border-b border-gray-200">
+        <tr>
+          <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Store</th>
+          <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Date</th>
+          <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">Total</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <tr th:each="r : ${receipts}" class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-3 text-sm font-medium text-gray-900" th:text="${r.store}">Store</td>
+          <td class="px-4 py-3 text-sm text-gray-600" th:text="${r.date}">Date</td>
+          <td class="px-4 py-3 text-sm text-gray-900 text-right font-mono"
+              th:text="${#numbers.formatDecimal(r.total, 1, 2, 'COMMA')} + ' €'">Total</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <a th:href="@{/receipts/{id}(id=${r.id})}"
+                 class="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded">View</a>
+              <button th:hx-delete="@{/receipts/{id}(id=${r.id})}"
+                      hx-target="closest tr"
+                      hx-swap="outerHTML swap:0.3s"
+                      hx-confirm="Delete this receipt?"
+                      class="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded">
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+
+</html>
